@@ -148,6 +148,14 @@ class ReasonsLog:
         all_reasons = self.get_all()
         return all_reasons[-count:] if all_reasons else []
 
+    def get_today_count(self) -> int:
+        """Return the number of times extra time was requested today."""
+        today = date.today().isoformat()
+        with self._lock:
+            data = _safe_load_json(REASONS_FILE, [])
+            if not isinstance(data, list): return 0
+            return sum(1 for entry in data if entry.get("date") == today)
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # STATS TRACKER — XP, streaks, daily focus data

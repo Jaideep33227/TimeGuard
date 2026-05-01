@@ -36,6 +36,7 @@ AUTO_SAVE_INTERVAL = 30
 # ─── Modes ────────────────────────────────────────────────────────────────────
 MODE_TEST = "test"
 MODE_REAL = "real"
+MODE_HARDCORE = "hardcore"
 DEFAULT_MODE = MODE_TEST
 
 # ─── Color Palette ────────────────────────────────────────────────────────────

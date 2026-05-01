@@ -11,7 +11,7 @@ SAFETY GUARANTEES:
 import customtkinter as ctk
 import winsound
 import threading
-from constants import COLORS, FONTS, BEEP_FREQUENCY, BEEP_DURATION, BEEP_COUNT, MODE_TEST
+from constants import COLORS, FONTS, BEEP_FREQUENCY, BEEP_DURATION, BEEP_COUNT, MODE_TEST, MODE_HARDCORE
 
 
 class LockScreen(ctk.CTkToplevel):
@@ -82,13 +82,43 @@ class LockScreen(ctk.CTkToplevel):
                      justify="center").pack(pady=(0, 15))
 
         # Mode badge
-        mode_text = "🧪 TEST MODE — Safe Overlay" if self._mode == MODE_TEST else "🔒 REAL MODE"
-        mode_color = COLORS["success"] if self._mode == MODE_TEST else COLORS["warning"]
+        if self._mode == MODE_TEST:
+            mode_text, mode_color = "🧪 TEST MODE — Safe Overlay", COLORS["success"]
+        elif self._mode == MODE_HARDCORE:
+            mode_text, mode_color = "🔥 HARDCORE MODE — No Escape", COLORS["danger"]
+        else:
+            mode_text, mode_color = "🔒 REAL MODE", COLORS["warning"]
+            
         ctk.CTkLabel(card, text=mode_text, font=FONTS["badge"],
                      text_color=mode_color, fg_color=COLORS["bg_card"],
                      corner_radius=12, padx=16, pady=4).pack(pady=(0, 20))
 
         # ─── Add Time Section ─────────────────────────────────────────
+        if self._mode != MODE_HARDCORE:
+            self._build_add_time_section(card)
+
+        # Status label
+        self._status = ctk.CTkLabel(card, text="", font=FONTS["body_small"],
+                                    text_color=COLORS["danger"])
+        self._status.pack(pady=(0, 5))
+
+        # ─── Unlock Button (Delayed) ──────────────────────────────────
+        self._unlock_frame = ctk.CTkFrame(card, fg_color="transparent")
+        self._unlock_frame.pack(fill="x", padx=25, pady=(5, 8))
+        
+        self._delay_label = ctk.CTkLabel(self._unlock_frame, text="You said you'd focus. Don't quit now.\nUnlock available in 10s...", 
+                                        font=FONTS["body_small"], text_color=COLORS["text_dim"])
+        self._delay_label.pack(pady=10)
+        
+        # Shortcut hint
+        ctk.CTkLabel(card, text="Press Ctrl + Shift + U to emergency exit",
+                     font=FONTS["body_small"],
+                     text_color=COLORS["text_dim"]).pack(pady=(0, 12))
+
+        # Start delayed unlock timer
+        self.after(10000, self._show_unlock_button)
+
+    def _build_add_time_section(self, card):
         add_frame = ctk.CTkFrame(card, fg_color=COLORS["bg_card"], corner_radius=15)
         add_frame.pack(fill="x", padx=25, pady=(0, 12))
 
@@ -128,37 +158,42 @@ class LockScreen(ctk.CTkToplevel):
                       command=self._request_extra_time
                       ).pack(fill="x", padx=18, pady=(0, 12))
 
-        # Status label
-        self._status = ctk.CTkLabel(card, text="", font=FONTS["body_small"],
-                                    text_color=COLORS["danger"])
-        self._status.pack(pady=(0, 5))
-
-        # ─── Unlock Button ────────────────────────────────────────────
-        if self._mode == MODE_TEST:
-            ctk.CTkButton(
-                card, text="🔓  Unlock (Test Mode)",
-                font=("Segoe UI", 16, "bold"),
-                fg_color=COLORS["success"],
-                hover_color=COLORS["success_hover"],
-                text_color=COLORS["bg_primary"],
-                corner_radius=12, height=48,
-                command=self._unlock
-            ).pack(fill="x", padx=25, pady=(5, 8))
-        else:
-            ctk.CTkButton(
-                card, text="🔓  Unlock (Enter Reason Above)",
-                font=("Segoe UI", 14, "bold"),
-                fg_color=COLORS["warning"],
-                hover_color=COLORS["accent_hover"],
-                text_color=COLORS["bg_primary"],
-                corner_radius=12, height=44,
-                command=self._unlock_real
-            ).pack(fill="x", padx=25, pady=(5, 8))
-
-        # Shortcut hint
-        ctk.CTkLabel(card, text="Press Ctrl + Shift + U to emergency exit",
-                     font=FONTS["body_small"],
-                     text_color=COLORS["text_dim"]).pack(pady=(0, 12))
+    def _show_unlock_button(self):
+        if self._is_closing: return
+        try:
+            self._delay_label.destroy()
+            if self._mode == MODE_TEST:
+                ctk.CTkButton(
+                    self._unlock_frame, text="🔓  Unlock (Test Mode)",
+                    font=("Segoe UI", 16, "bold"),
+                    fg_color=COLORS["success"],
+                    hover_color=COLORS["success_hover"],
+                    text_color=COLORS["bg_primary"],
+                    corner_radius=12, height=48,
+                    command=self._unlock
+                ).pack(fill="x")
+            elif self._mode == MODE_HARDCORE:
+                ctk.CTkButton(
+                    self._unlock_frame, text="🔓  Give Up (Hardcore)",
+                    font=("Segoe UI", 14, "bold"),
+                    fg_color=COLORS["danger"],
+                    hover_color=COLORS["accent_hover"],
+                    text_color=COLORS["text_primary"],
+                    corner_radius=12, height=44,
+                    command=self._unlock
+                ).pack(fill="x")
+            else:
+                ctk.CTkButton(
+                    self._unlock_frame, text="🔓  Unlock (Enter Reason Above)",
+                    font=("Segoe UI", 14, "bold"),
+                    fg_color=COLORS["warning"],
+                    hover_color=COLORS["accent_hover"],
+                    text_color=COLORS["bg_primary"],
+                    corner_radius=12, height=44,
+                    command=self._unlock_real
+                ).pack(fill="x")
+        except Exception:
+            pass
 
     # ─── Behaviour ────────────────────────────────────────────────────
 
