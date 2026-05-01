@@ -176,6 +176,7 @@ class StatsTracker:
         "focus_minutes": 0,
         "sessions_completed": 0,
         "xp_earned": 0,
+        "hardcore_quits": 0,
     }
 
     def __init__(self):
@@ -272,6 +273,32 @@ class StatsTracker:
             self._data["current_streak"]
         )
         return streak_xp
+
+    def record_hardcore_quit(self) -> int:
+        """Penalize the user for quitting hardcore mode: -50 XP, break streak."""
+        with self._lock:
+            self._ensure_today()
+            today = self._today_key()
+            
+            # Penalty
+            penalty = 50
+            self._data["total_xp"] = max(0, self._data["total_xp"] - penalty)
+            self._data["days"][today]["xp_earned"] -= penalty
+            
+            # Break streak
+            self._data["current_streak"] = 0
+            
+            # Track quits for escalation
+            self._data["days"][today]["hardcore_quits"] = self._data["days"][today].get("hardcore_quits", 0) + 1
+            quits_today = self._data["days"][today]["hardcore_quits"]
+            
+        self.save()
+        return quits_today
+
+    def get_hardcore_quits_today(self) -> int:
+        with self._lock:
+            self._ensure_today()
+            return self._data["days"][self._today_key()].get("hardcore_quits", 0)
 
     def get_today_stats(self) -> dict:
         with self._lock:

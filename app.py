@@ -193,6 +193,9 @@ class FocusLockApp(ctk.CTk):
         self._lf_xp = self._stat_box(sg2, "Total XP", "0", 1, 0)
         self._lf_days = self._stat_box(sg2, "Days Active", "0", 1, 1)
 
+        # Share Button
+        ctk.CTkButton(lf_card, text="📋 Copy Today's Stats", font=FONTS["button"], fg_color=COLORS["secondary"], hover_color=COLORS["accent"], command=self._share_stats).pack(fill="x", padx=20, pady=(0, 20))
+
         # Recent Reasons & Insights
         bottom_frame = ctk.CTkFrame(frame, fg_color="transparent")
         bottom_frame.pack(fill="x", pady=(0, 15))
@@ -388,11 +391,49 @@ class FocusLockApp(ctk.CTk):
             try: self._lock_screen.destroy()
             except Exception: pass
             
+        quits = self.stats.get_hardcore_quits_today()
+            
         self._lock_screen = LockScreen(
             self, mode=self._mode,
             on_unlock=self._on_lock_unlock,
-            on_add_time=self._handle_lock_add_time
+            on_add_time=self._handle_lock_add_time,
+            hardcore_quits=quits,
+            on_give_up=self._handle_hardcore_give_up
         )
+
+    def _handle_hardcore_give_up(self):
+        """The 'Moment': Punish the user for giving up."""
+        self._lock_screen = None
+        self.timer.stop()
+        
+        # Apply penalty
+        quits = self.stats.record_hardcore_quit()
+        self._update_all_stats()
+        
+        try: winsound.MessageBeep(winsound.MB_ICONHAND) # Error sound
+        except: pass
+        
+        dlg = ctk.CTkToplevel(self)
+        dlg.title("FOCUS BROKEN")
+        dlg.geometry("500x350")
+        dlg.configure(fg_color="#3a0d12") # Deep red background
+        dlg.attributes("-topmost", True)
+        dlg.grab_set()
+
+        ctk.CTkLabel(dlg, text="⛔", font=FONTS["big_emoji"]).pack(pady=(30, 5))
+        ctk.CTkLabel(dlg, text="FOCUS BROKEN", font=FONTS["title"], text_color="#ff4757").pack()
+        
+        f = ctk.CTkFrame(dlg, fg_color="#1a0608", corner_radius=10)
+        f.pack(fill="x", padx=40, pady=20, ipady=15)
+        
+        ctk.CTkLabel(f, text="You failed your commitment.", font=FONTS["heading"], text_color="#eaeaea").pack(pady=(10, 5))
+        ctk.CTkLabel(f, text="-50 XP", font=("Segoe UI", 28, "bold"), text_color="#ff4757").pack(pady=5)
+        ctk.CTkLabel(f, text="Streak Reset to 0", font=FONTS["body"], text_color="#ff4757").pack(pady=5)
+
+        def proceed():
+            dlg.destroy()
+            
+        ctk.CTkButton(dlg, text="Accept Consequence", font=FONTS["button"], fg_color="#ff4757", hover_color="#c73e54", text_color="#ffffff", height=45, command=proceed).pack(pady=10)
 
     def _handle_lock_add_time(self, mins, reason):
         self.reasons_log.add(reason, mins)
@@ -446,6 +487,27 @@ class FocusLockApp(ctk.CTk):
             self._insight_label.configure(text="Complete sessions to build your daily streak and earn bonus XP multipliers.")
 
         self._update_reasons_list()
+
+    def _share_stats(self):
+        td = self.stats.get_today_stats()
+        lf = self.stats.get_all_time_stats()
+        fm = td.get("focus_minutes", 0)
+        sess = td.get("sessions_completed", 0)
+        xp = td.get("xp_earned", 0)
+        streak = lf.get("current_streak", 0)
+        
+        fmt_time = f"{fm//60}h {fm%60}m" if fm >= 60 else f"{fm}m"
+        
+        text = (
+            "🔥 FocusLock Daily Report\n"
+            f"⏱️ {fmt_time} focused\n"
+            f"✅ {sess} sessions completed\n"
+            f"⚡ +{xp} XP earned\n"
+            f"📈 {streak}-day streak active\n"
+        )
+        self.clipboard_clear()
+        self.clipboard_append(text)
+        self.update() # Required for clipboard on Windows
 
     def _update_reasons_list(self):
         for widget in self._reasons_frame.winfo_children():

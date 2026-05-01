@@ -17,13 +17,20 @@ from constants import COLORS, FONTS, BEEP_FREQUENCY, BEEP_DURATION, BEEP_COUNT, 
 class LockScreen(ctk.CTkToplevel):
     """Full-screen overlay shown when timer expires. Always safe and reversible."""
 
-    def __init__(self, parent, mode=MODE_TEST, on_unlock=None, on_add_time=None):
+    def __init__(self, parent, mode=MODE_TEST, on_unlock=None, on_add_time=None, hardcore_quits=0, on_give_up=None):
         super().__init__(parent)
 
         self._mode = mode
         self._on_unlock = on_unlock
         self._on_add_time = on_add_time
+        self._on_give_up = on_give_up
         self._is_closing = False
+        
+        # Calculate dynamic delay
+        self._delay_ms = 10000
+        if self._mode == MODE_HARDCORE:
+            if hardcore_quits == 1: self._delay_ms = 30000
+            elif hardcore_quits >= 2: self._delay_ms = 60000
 
         # ─── Window config ────────────────────────────────────────────
         self.title("FocusLock — Time's Up!")
@@ -106,7 +113,8 @@ class LockScreen(ctk.CTkToplevel):
         self._unlock_frame = ctk.CTkFrame(card, fg_color="transparent")
         self._unlock_frame.pack(fill="x", padx=25, pady=(5, 8))
         
-        self._delay_label = ctk.CTkLabel(self._unlock_frame, text="You said you'd focus. Don't quit now.\nUnlock available in 10s...", 
+        delay_sec = self._delay_ms // 1000
+        self._delay_label = ctk.CTkLabel(self._unlock_frame, text=f"You made a promise to yourself.\nDon't break it.\n(Unlock available in {delay_sec}s...)", 
                                         font=FONTS["body_small"], text_color=COLORS["text_dim"])
         self._delay_label.pack(pady=10)
         
@@ -116,7 +124,7 @@ class LockScreen(ctk.CTkToplevel):
                      text_color=COLORS["text_dim"]).pack(pady=(0, 12))
 
         # Start delayed unlock timer
-        self.after(10000, self._show_unlock_button)
+        self.after(self._delay_ms, self._show_unlock_button)
 
     def _build_add_time_section(self, card):
         add_frame = ctk.CTkFrame(card, fg_color=COLORS["bg_card"], corner_radius=15)
@@ -174,13 +182,13 @@ class LockScreen(ctk.CTkToplevel):
                 ).pack(fill="x")
             elif self._mode == MODE_HARDCORE:
                 ctk.CTkButton(
-                    self._unlock_frame, text="🔓  Give Up (Hardcore)",
+                    self._unlock_frame, text="🔓  Give Up (Hardcore Penalty)",
                     font=("Segoe UI", 14, "bold"),
                     fg_color=COLORS["danger"],
                     hover_color=COLORS["accent_hover"],
                     text_color=COLORS["text_primary"],
                     corner_radius=12, height=44,
-                    command=self._unlock
+                    command=self._trigger_give_up
                 ).pack(fill="x")
             else:
                 ctk.CTkButton(
@@ -196,6 +204,16 @@ class LockScreen(ctk.CTkToplevel):
             pass
 
     # ─── Behaviour ────────────────────────────────────────────────────
+
+    def _trigger_give_up(self):
+        """Trigger the hardcore give up penalty flow."""
+        if self._is_closing: return
+        self._is_closing = True
+        try: self.grab_release()
+        except Exception: pass
+        if self._on_give_up: self._on_give_up()
+        try: self.destroy()
+        except Exception: pass
 
     def _keep_on_top(self):
         """Re-assert topmost position periodically."""
