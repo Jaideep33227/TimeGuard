@@ -1,5 +1,6 @@
 """
-constants.py — App-wide constants, color palette, XP configuration, and file paths.
+constants.py — App-wide constants, color palette, XP config, and file paths.
+Central configuration for the entire FocusLock application.
 """
 
 import os
@@ -7,12 +8,11 @@ import sys
 
 # ─── App Identity ─────────────────────────────────────────────────────────────
 APP_NAME = "FocusLock"
-APP_VERSION = "1.0.0"
-WINDOW_TITLE = f"🎯 {APP_NAME} v{APP_VERSION}"
-WINDOW_SIZE = "520x820"
+APP_VERSION = "2.0.0"
+WINDOW_TITLE = f"🎯 {APP_NAME}"
+WINDOW_SIZE = "540x780"
 
 # ─── File Paths ───────────────────────────────────────────────────────────────
-# Data directory: stored next to the script (or exe) for portability
 if getattr(sys, 'frozen', False):
     BASE_DIR = os.path.dirname(sys.executable)
 else:
@@ -24,65 +24,78 @@ REASONS_FILE = os.path.join(DATA_DIR, "reasons.json")
 STATS_FILE = os.path.join(DATA_DIR, "stats.json")
 LOCK_FILE = os.path.join(DATA_DIR, ".focuslock.lock")
 
-# Ensure data directory exists
 os.makedirs(DATA_DIR, exist_ok=True)
 
-# ─── Timer Defaults ──────────────────────────────────────────────────────────
+# ─── Timer ────────────────────────────────────────────────────────────────────
 DEFAULT_HOURS = 1
 DEFAULT_MINUTES = 0
-MIN_TIMER_SECONDS = 60          # Minimum 1 minute
-MAX_TIMER_SECONDS = 12 * 3600   # Maximum 12 hours
-AUTO_SAVE_INTERVAL = 30         # Save state every 30 seconds
+MIN_TIMER_SECONDS = 60
+MAX_TIMER_SECONDS = 12 * 3600
+AUTO_SAVE_INTERVAL = 30
 
 # ─── Modes ────────────────────────────────────────────────────────────────────
 MODE_TEST = "test"
 MODE_REAL = "real"
 DEFAULT_MODE = MODE_TEST
 
-# ─── Color Palette (Dark Theme) ──────────────────────────────────────────────
+# ─── Color Palette ────────────────────────────────────────────────────────────
 COLORS = {
-    "bg_primary":     "#0f0f1a",      # Deep dark background
-    "bg_secondary":   "#1a1a2e",      # Card / section background
-    "bg_card":        "#16213e",      # Elevated card background
-    "bg_input":       "#0d1b2a",      # Input field background
-    "accent":         "#e94560",      # Vibrant coral-red (primary accent)
-    "accent_hover":   "#ff6b81",      # Lighter accent for hover
-    "accent_dark":    "#c73e54",      # Darker accent for press
-    "secondary":      "#0f3460",      # Medium blue (secondary accent)
-    "text_primary":   "#eaeaea",      # Primary text
-    "text_secondary": "#8892b0",      # Muted text
-    "text_dim":       "#4a5568",      # Very muted text
-    "success":        "#4ecca3",      # Mint green
-    "success_hover":  "#6ee7b7",      # Lighter green
-    "warning":        "#f0a500",      # Amber
-    "danger":         "#ff4757",      # Red for danger
-    "border":         "#2a2a4a",      # Subtle border
-    "progress_bg":    "#1e1e3a",      # Progress bar track
-    "progress_fill":  "#e94560",      # Progress bar fill
-    "glow":           "#e9456033",    # Glow effect (semi-transparent)
+    # Backgrounds
+    "bg_primary":     "#0b0b14",
+    "bg_secondary":   "#12122a",
+    "bg_card":        "#1a1a3e",
+    "bg_input":       "#0d0d20",
+    "bg_nav":         "#0e0e1c",
+
+    # Accents
+    "accent":         "#e94560",
+    "accent_hover":   "#ff6b81",
+    "accent_dark":    "#c73e54",
+    "secondary":      "#0f3460",
+    "secondary_hover":"#1a4a80",
+
+    # Text
+    "text_primary":   "#eaeaea",
+    "text_secondary": "#8892b0",
+    "text_dim":       "#4a5568",
+
+    # Semantic
+    "success":        "#4ecca3",
+    "success_hover":  "#6ee7b7",
+    "warning":        "#f0a500",
+    "danger":         "#ff4757",
+
+    # UI elements
+    "border":         "#2a2a4a",
+    "progress_bg":    "#1e1e3a",
+    "progress_fill":  "#e94560",
+    "nav_active":     "#e94560",
+    "nav_inactive":   "#4a5568",
 }
 
-# ─── Font Configuration ──────────────────────────────────────────────────────
+# ─── Fonts ────────────────────────────────────────────────────────────────────
 FONTS = {
-    "title":          ("Segoe UI", 20, "bold"),
-    "timer_large":    ("Consolas", 56, "bold"),
+    "title":          ("Segoe UI", 22, "bold"),
+    "timer_large":    ("Consolas", 52, "bold"),
     "timer_label":    ("Segoe UI", 13),
-    "heading":        ("Segoe UI", 15, "bold"),
+    "heading":        ("Segoe UI", 16, "bold"),
     "subheading":     ("Segoe UI", 12, "bold"),
     "body":           ("Segoe UI", 12),
     "body_small":     ("Segoe UI", 10),
     "button":         ("Segoe UI", 12, "bold"),
-    "stat_value":     ("Segoe UI", 16, "bold"),
+    "stat_value":     ("Segoe UI", 18, "bold"),
     "stat_label":     ("Segoe UI", 10),
     "badge":          ("Segoe UI", 9, "bold"),
+    "nav":            ("Segoe UI", 11, "bold"),
+    "big_emoji":      ("Segoe UI Emoji", 56),
+    "xp_popup":       ("Segoe UI", 24, "bold"),
 }
 
-# ─── XP / Reward System ──────────────────────────────────────────────────────
-XP_PER_MINUTE = 2              # XP earned per minute of focus
-XP_SESSION_BONUS = 50          # Bonus XP for completing a full session
-XP_STREAK_MULTIPLIER = 25     # XP per streak day bonus
+# ─── XP System ────────────────────────────────────────────────────────────────
+XP_PER_MINUTE = 2
+XP_SESSION_BONUS = 50
+XP_STREAK_MULTIPLIER = 25
 
-# Level thresholds and titles
 LEVELS = [
     (0,     "Beginner",             "🌱"),
     (100,   "Focused Novice",       "🔰"),
@@ -96,8 +109,9 @@ LEVELS = [
     (10000, "Transcended",          "✨"),
 ]
 
+
 def get_level_info(total_xp: int) -> dict:
-    """Get current level info based on total XP."""
+    """Calculate level, title, emoji, and progress from total XP."""
     level = 1
     title = LEVELS[0][1]
     emoji = LEVELS[0][2]
@@ -110,21 +124,33 @@ def get_level_info(total_xp: int) -> dict:
             title = name
             emoji = icon
             current_threshold = threshold
-            next_threshold = LEVELS[i + 1][0] if i + 1 < len(LEVELS) else threshold
+            if i + 1 < len(LEVELS):
+                next_threshold = LEVELS[i + 1][0]
+            else:
+                next_threshold = threshold  # Max level
         else:
             break
+
+    xp_for_next = max(1, next_threshold - current_threshold)
+    xp_in_level = total_xp - current_threshold
 
     return {
         "level": level,
         "title": title,
         "emoji": emoji,
         "total_xp": total_xp,
-        "xp_in_level": total_xp - current_threshold,
-        "xp_for_next": next_threshold - current_threshold,
-        "progress": (total_xp - current_threshold) / max(1, next_threshold - current_threshold),
+        "xp_in_level": xp_in_level,
+        "xp_for_next": xp_for_next,
+        "progress": min(1.0, xp_in_level / xp_for_next),
     }
 
+
 # ─── Notification ─────────────────────────────────────────────────────────────
-BEEP_FREQUENCY = 800   # Hz
-BEEP_DURATION = 500    # ms
-BEEP_COUNT = 3         # Number of beeps when timer ends
+BEEP_FREQUENCY = 800
+BEEP_DURATION = 400
+BEEP_COUNT = 3
+
+# ─── Navigation Tabs ─────────────────────────────────────────────────────────
+TAB_TIMER = "timer"
+TAB_STATS = "stats"
+TAB_SETTINGS = "settings"
